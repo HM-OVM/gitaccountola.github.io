@@ -1,4 +1,18 @@
-function FindProxyForURL(url, host) {
-    // Using HTTPS for the secure connection to your proxy
-    return "HTTPS 40.172.162.21:443";
-}
+var FindProxyForURL = function(init, profiles) {
+    return function(url, host) {
+        "use strict";
+        var result = init, scheme = url.substr(0, url.indexOf(":"));
+        do {
+            if (!profiles[result]) return result;
+            result = profiles[result];
+            if (typeof result === "function") result = result(url, host, scheme);
+        } while (typeof result !== "string" || result.charCodeAt(0) === 43);
+        return result;
+    };
+}("+proxy", {
+    "+proxy": function(url, host, scheme) {
+        "use strict";
+        if (/^127\.0\.0\.1$/.test(host) || /^::1$/.test(host) || /^localhost$/.test(host)) return "DIRECT";
+        return "HTTPS 40.172.162.21:443";
+    }
+});
